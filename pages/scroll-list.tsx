@@ -15,7 +15,7 @@ import {
 import { I18nContext } from '../models/Translation';
 
 export const getServerSideProps = compose(errorLogger, cache(), async () => {
-  const list = await new RepositoryModel('idea2app').getList();
+  const list = await new RepositoryModel('dethan3').getList();
 
   return { props: JSON.parse(JSON.stringify({ list })) };
 });

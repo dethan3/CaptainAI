@@ -117,7 +117,7 @@ export const MainNavigator: FC = observer(() => {
             <a
               target="_blank"
               rel="noreferrer"
-              href="https://github.com/idea2app/Next-Bootstrap-TS"
+              href="https://github.com/dethan3/Next-Bootstrap-TS"
               className="rounded-md px-3 py-2 text-sm hover:bg-primary-foreground/10"
               onClick={() => setOpen(false)}
             >

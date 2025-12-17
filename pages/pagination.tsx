@@ -55,7 +55,7 @@ export const getServerSideProps: GetServerSideProps<{
     Number(typeof pageRaw === 'string' ? pageRaw : (pageRaw?.[0] ?? 1)) || 1,
   );
 
-  const allRepos = await fetchRepos('idea2app', process.env.GITHUB_TOKEN);
+  const allRepos = await fetchRepos('dethan3', process.env.GITHUB_TOKEN);
 
   const pageSize = 9;
   const pageCount = Math.max(1, Math.ceil(allRepos.length / pageSize));
