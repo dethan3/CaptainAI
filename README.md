@@ -9,6 +9,13 @@
 
 ## Technology stack
 
+Use Node.js 22.23.4 or a newer 22.x patch (see `.nvmrc`) and pnpm 10.28.2.
+For the emSign CA remediation, rebuild existing containers with
+`docker build --pull --no-cache -t dethan3/captainai:latest .` so both the base
+runtime and installed OS certificates are refreshed. The production workflow
+also requests a fresh, uncached build. Existing running containers must be
+replaced with the rebuilt image.
+
 - Language: [TypeScript v5][2] + [MDX v3][10]
 - Component engine: [Next.js v16][3]
 - Component suite: [Shadcn][4]
@@ -56,7 +63,7 @@
 First, run the development server:
 
 ```bash
-npm i pnpm -g
+npm i pnpm@10.28.2 -g
 pnpm dev
 ```
 
