@@ -1,5 +1,5 @@
-import { components } from 'npm:@octokit/openapi-types';
-import { stdin } from 'npm:zx';
+import type { components } from 'npm:@octokit/openapi-types';
+import { readFileSync } from 'node:fs';
 
 type GitHubSchema = components['schemas'];
 
@@ -11,7 +11,8 @@ interface GitHubAction
   ref?: string;
   ref_name?: string;
   event: {
-    head_commit?: GitHubSchema['git-commit'];
+    action?: string;
+    head_commit?: GitHubSchema['git-commit'] | null;
     issue?: GitHubSchema['webhook-issues-opened']['issue'];
     pull_request?: GitHubSchema['pull-request'];
     discussion?: GitHubSchema['discussion'];
@@ -63,13 +64,16 @@ const eventHandlers: Record<string, EventHandler> = {
   }) => ({
     title: 'GitHub 代码提交',
     content: [
-      [createText('提交链接：'), createLink(head_commit!.url)],
+      [
+        createText('提交链接：'),
+        createLink(head_commit?.url || `${server_url}/${repository}/tree/${ref_name}`),
+      ],
       [
         createText('代码分支：'),
         createLink(`${server_url}/${repository}/tree/${ref_name}`, ref),
       ],
       [createText('提交作者：'), createLink(`${server_url}/${actor}`, actor)],
-      [createText('提交信息：'), createText(head_commit!.message)],
+      [createText('提交信息：'), createText(head_commit?.message || '分支引用更新')],
     ],
   }),
 
@@ -170,7 +174,7 @@ const eventHandlers: Record<string, EventHandler> = {
 // Main processor
 const processEvent = (event: GitHubAction) => {
   const { event_name, action } = event;
-  const actionText = getActionText(action);
+  const actionText = getActionText(event.event.action ?? action);
   const handler = eventHandlers[event_name];
 
   if (!handler) throw new Error(`No handler found for event: ${event_name}`);
@@ -186,7 +190,7 @@ const processEvent = (event: GitHubAction) => {
 };
 
 // Main execution：Processing GitHub Events and Outputting Results
-const event = JSON.parse((await stdin()) || '{}') as GitHubAction;
+const event = JSON.parse(readFileSync(0, 'utf8') || '{}') as GitHubAction;
 const zh_cn = processEvent(event);
 
 if (zh_cn) console.log(JSON.stringify({ post: { zh_cn } }));
