@@ -15,25 +15,28 @@ on:
 jobs:
   send-Lark-message:
     runs-on: ubuntu-latest
+    env:
+      LARK_CHATBOT_HOOK_URL: ${{ secrets.LARK_CHATBOT_HOOK_URL }}
     steps:
       - uses: actions/checkout@v4
+        if: env.LARK_CHATBOT_HOOK_URL != ''
 
-      - uses: denoland/setup-deno@v2
+      - uses: actions/setup-node@v4
+        if: env.LARK_CHATBOT_HOOK_URL != ''
         with:
-          deno-version: v2.x
+          node-version-file: '.nvmrc'
 
       - name: Event Message serialization
         id: message
+        if: env.LARK_CHATBOT_HOOK_URL != ''
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
         run: |
-          YAML=$(echo '${{ toJSON(github) }}' | deno --allow-all .github/scripts/transform-message.ts)
-          {
-            echo 'content<<EOF'
-            echo $YAML
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
+          content=$(printf '%s' "$GITHUB_CONTEXT" | node --experimental-strip-types .github/scripts/transform-message.ts)
+          printf 'content=%s\n' "$content" >> "$GITHUB_OUTPUT"
 
       - name: Send message to Lark
-        if: ${{ contains(steps.message.outputs.content, ':') }}
+        if: env.LARK_CHATBOT_HOOK_URL != '' && steps.message.outputs.content != ''
         uses: foxundermoon/feishu-action@v2
         with:
           url: ${{ secrets.LARK_CHATBOT_HOOK_URL }}

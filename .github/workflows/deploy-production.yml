@@ -39,9 +39,9 @@ jobs:
           platforms: linux/amd64
           tags: ${{ env.BOX_URL }}:latest
           outputs: type=docker,dest=${{ env.ARTIFACT_PATH }}
-          # use GitHub actions cache
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Refresh the base image and OS CA certificates on every build.
+          pull: true
+          no-cache: true
 
       - name: Pick Docker Compose
         run: |

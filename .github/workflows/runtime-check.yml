@@ -1,0 +1,46 @@
+name: Runtime image check
+
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .nvmrc
+      - package.json
+      - pnpm-lock.yaml
+      - '.github/scripts/transform-message*'
+      - '.github/workflows/Lark-notification.yml'
+      - '.github/workflows/main.yml'
+      - '.github/workflows/runtime-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notification:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - run: node --experimental-strip-types --test .github/scripts/transform-message.test.ts
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the production image without publishing
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          pull: true
+          no-cache: true
+          load: true
+          push: false
+          tags: captainai:runtime-check
+      - name: Verify the image runtime matches the development pin
+        run: |
+          actual=$(docker run --rm --entrypoint node captainai:runtime-check --version)
+          expected="v$(tr -d '\r\n' < .nvmrc)"
+          test "$actual" = "$expected"
